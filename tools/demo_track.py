@@ -262,19 +262,20 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
             if outputs[0] is not None:
                 #online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
                 out = outputs[0]
-                if outputs.shape[1] == 5:
+                if out.shape[1] == 5:
                     scores = out[:, 4]
                     bboxes = out[:, :4]
                 else:
                     out = out.cpu().numpy()
-                    scores = out[:, 4] * out[:, 5]
+                    out[:, 4] = out[:, 4] * out[:, 5]
                     bboxes = out[:, :4]  # x1y1x2y2
                 online_tlwhs = []
                 online_ids = []
                 online_scores = []
-                for i,x1,y1,x2,y2 in enumerate(bboxes):
+                img_h, img_w = img_info[0], img_info[1]
+                for x1,y1,x2,y2,score in out[:,:5]:
                     results.append(
-                        f"{frame_id},{x1:.2f},{y1:.2f},{x2:.2f},{y2:.2f},{scores[i]:.2f}\n"
+                        f"{frame_id},{x1/img_w:.2f},{y1/img_h:.2f},{(x2-x1)/img_w:.2f},{(y2-y1)/img_h:.2f},{score:.2f}\n"
                     )
                 timer.toc()
                 online_im = plot_tracking(
