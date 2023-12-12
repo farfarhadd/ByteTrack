@@ -272,10 +272,9 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
                 online_tlwhs = []
                 online_ids = []
                 online_scores = []
-                img_h, img_w = img_info[0], img_info[1]
                 for x1,y1,x2,y2,score in out[:,:5]:
                     results.append(
-                        f"{frame_id},{x1/img_w:.2f},{y1/img_h:.2f},{(x2-x1)/img_w:.2f},{(y2-y1)/img_h:.2f},{score:.2f}\n"
+                        f"{frame_id},{x1:.2f},{y1:.2f},{x2-x1:.2f},{y2-y1:.2f},{score:.2f}\n"
                     )
                 timer.toc()
                 online_im = plot_tracking(
