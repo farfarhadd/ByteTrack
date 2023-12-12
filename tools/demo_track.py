@@ -260,21 +260,22 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
         if ret_val:
             outputs, img_info = predictor.inference(frame, timer)
             if outputs[0] is not None:
-                online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+                #online_targets = tracker.update(outputs[0], [img_info['height'], img_info['width']], exp.test_size)
+                out = outputs[0]
+                if outputs.shape[1] == 5:
+                    scores = out[:, 4]
+                    bboxes = out[:, :4]
+                else:
+                    out = out.cpu().numpy()
+                    scores = out[:, 4] * out[:, 5]
+                    bboxes = out[:, :4]  # x1y1x2y2
                 online_tlwhs = []
                 online_ids = []
                 online_scores = []
-                for t in online_targets:
-                    tlwh = t.tlwh
-                    tid = t.track_id
-                    vertical = tlwh[2] / tlwh[3] > args.aspect_ratio_thresh
-                    if tlwh[2] * tlwh[3] > args.min_box_area and not vertical:
-                        online_tlwhs.append(tlwh)
-                        online_ids.append(tid)
-                        online_scores.append(t.score)
-                        results.append(
-                            f"{frame_id},{tid},{tlwh[0]:.2f},{tlwh[1]:.2f},{tlwh[2]:.2f},{tlwh[3]:.2f},{t.score:.2f},-1,-1,-1\n"
-                        )
+                for i,x1,y1,x2,y2 in enumerate(bboxes):
+                    results.append(
+                        f"{frame_id},{x1:.2f},{y1:.2f},{x2:.2f},{y2:.2f},{scores[i]:.2f}\n"
+                    )
                 timer.toc()
                 online_im = plot_tracking(
                     img_info['raw_img'], online_tlwhs, online_ids, frame_id=frame_id + 1, fps=1. / timer.average_time
